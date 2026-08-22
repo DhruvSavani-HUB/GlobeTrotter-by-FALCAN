@@ -120,6 +120,14 @@ function Login() {
                         Create Account
                     </Link>
                 </p>
+                <p className="text-center text-gray-600 mt-6">
+                    <Link
+                        to="/dashboard"
+                        className="text-blue-600 font-semibold hover:underline"
+                    >
+                        Go to Dashboard
+                    </Link>
+                </p>
             </div>
         </div>
     );
