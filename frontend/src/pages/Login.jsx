@@ -10,6 +10,9 @@ function Login() {
         password: '',
     });
 
+    const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
+
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -20,19 +23,30 @@ function Login() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        setError('');
+        setLoading(true);
+
         try {
             const response = await api.post('/auth/login', {
                 email: formData.email,
                 password: formData.password,
             });
 
+            // Save token
             localStorage.setItem('token', response.data.token);
 
+            // Save user
             localStorage.setItem('user', JSON.stringify(response.data.user));
 
+            // Redirect to dashboard
             navigate('/dashboard');
         } catch (error) {
-            alert(error.response?.data?.message || 'Login failed');
+            setError(
+                error.response?.data?.message ||
+                    'Login failed. Please try again.',
+            );
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -44,10 +58,14 @@ function Login() {
                         GlobeTrotter
                     </h1>
 
-                    <p className="text-gray-500 mt-2">
-                        Plan your next adventure
-                    </p>
+                    <p className="text-gray-500 mt-2">Welcome back, traveler</p>
                 </div>
+
+                {error && (
+                    <div className="mb-4 p-3 bg-red-100 text-red-600 rounded-lg text-sm">
+                        {error}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit} className="space-y-5">
                     <div>
@@ -62,6 +80,7 @@ function Login() {
                             onChange={handleChange}
                             placeholder="Enter your email"
                             required
+                            disabled={loading}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
@@ -78,15 +97,17 @@ function Login() {
                             onChange={handleChange}
                             placeholder="Enter your password"
                             required
+                            disabled={loading}
                             className="w-full px-4 py-3 border border-gray-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
                         />
                     </div>
 
                     <button
                         type="submit"
-                        className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition"
+                        disabled={loading}
+                        className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-60"
                     >
-                        Login
+                        {loading ? 'Logging in...' : 'Login'}
                     </button>
                 </form>
 
@@ -97,14 +118,6 @@ function Login() {
                         className="text-blue-600 font-semibold hover:underline"
                     >
                         Create Account
-                    </Link>
-                </p>
-                <p className="text-center text-gray-600 mt-6">
-                    <Link
-                        to="/dashboard"
-                        className="text-blue-700 font-semibold hover:underline"
-                    >
-                        Back to Dashboard
                     </Link>
                 </p>
             </div>

@@ -7,6 +7,9 @@ import MyTrips from './pages/MyTrips.jsx';
 import CreateTrip from './pages/CreateTrip.jsx';
 import TripDetails from './pages/TripDetails.jsx';
 import EditTrip from './pages/EditTrip.jsx';
+import CitySearch from './pages/CitySearch.jsx';
+import ActivitySearch from './pages/ActivitySearch.jsx';
+import Budget from './pages/Budget.jsx';
 
 function App() {
     return (
@@ -20,6 +23,9 @@ function App() {
             <Route path="/create-trip" element={<CreateTrip />} />
             <Route path="/trip/:id" element={<TripDetails />} />
             <Route path="/trip/:id/edit" element={<EditTrip />} />
+            <Route path="/cities" element={<CitySearch />} />
+            <Route path="/activities" element={<ActivitySearch />} />
+            <Route path="/budget" element={<Budget />} />
         </Routes>
     );
 }

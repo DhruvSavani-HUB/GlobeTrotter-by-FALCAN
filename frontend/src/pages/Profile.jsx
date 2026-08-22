@@ -4,8 +4,8 @@ import { useState } from 'react';
 
 const Profile = () => {
     const [user, setUser] = useState({
-        name: 'GlobeTrotter User',
-        email: 'user@example.com',
+        name: 'Dhruv Savani',
+        email: 'dhruv@gmail.com',
     });
 
     const [isEditing, setIsEditing] = useState(false);
