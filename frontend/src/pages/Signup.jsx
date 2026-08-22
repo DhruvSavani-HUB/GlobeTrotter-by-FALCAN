@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '../api/api';
 
 function Signup() {
     const navigate = useNavigate();
@@ -20,7 +21,7 @@ function Signup() {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         setError('');
@@ -30,13 +31,20 @@ function Signup() {
             return;
         }
 
-        console.log('Signup Data:', formData);
+        try {
+            const response = await api.post('/auth/signup', {
+                name: formData.name,
+                email: formData.email,
+                password: formData.password,
+            });
 
-        // Temporary navigation
-        // Later replace this with backend API signup
-        navigate('/login');
+            console.log(response.data);
+
+            navigate('/login');
+        } catch (error) {
+            setError(error.response?.data?.message || 'Signup failed');
+        }
     };
-
     return (
         <>
             <div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">

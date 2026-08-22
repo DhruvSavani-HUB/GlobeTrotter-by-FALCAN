@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import api from '../api/api';
 
 function Login() {
     const navigate = useNavigate();
@@ -16,14 +17,23 @@ function Login() {
         });
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
-        console.log('Login Data:', formData);
+        try {
+            const response = await api.post('/auth/login', {
+                email: formData.email,
+                password: formData.password,
+            });
 
-        // Temporary navigation
-        // Later replace this with backend API login
-        navigate('/dashboard');
+            localStorage.setItem('token', response.data.token);
+
+            localStorage.setItem('user', JSON.stringify(response.data.user));
+
+            navigate('/dashboard');
+        } catch (error) {
+            alert(error.response?.data?.message || 'Login failed');
+        }
     };
 
     return (

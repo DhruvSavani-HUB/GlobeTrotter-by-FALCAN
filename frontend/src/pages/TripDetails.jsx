@@ -7,42 +7,42 @@ function TripDetails() {
 
     const [trip, setTrip] = useState(null);
 
-    // useEffect(() => {
-    //     const savedTrips = JSON.parse(localStorage.getItem('trips')) || [];
+    useEffect(() => {
+        const savedTrips = JSON.parse(localStorage.getItem('trips')) || [];
 
-    //     const foundTrip = savedTrips.find(
-    //         (item) => String(item.id) === String(id),
-    //     );
+        const foundTrip = savedTrips.find(
+            (item) => String(item.id) === String(id),
+        );
 
-    //     setTrip(foundTrip);
-    // }, [id]);
+        setTrip(foundTrip);
+    }, [id]);
 
-    // if (!trip) {
-    //     return (
-    //         <div className="min-h-screen bg-gray-100">
-    //             <Navbar />
+    if (!trip) {
+        return (
+            <div className="min-h-screen bg-gray-100">
+                <Navbar />
 
-    //             <div className="p-10 text-center">
-    //                 <h1 className="text-2xl font-bold text-gray-800">
-    //                     Trip Not Found
-    //                 </h1>
+                <div className="p-10 text-center">
+                    <h1 className="text-2xl font-bold text-gray-800">
+                        Trip Not Found
+                    </h1>
 
-    //                 <Link
-    //                     to="/my-trips"
-    //                     className="inline-block mt-5 text-blue-600 hover:underline"
-    //                 >
-    //                     ← Back to My Trips
-    //                 </Link>
-    //             </div>
-    //         </div>
-    //     );
-    // }
+                    <Link
+                        to="/my-trips"
+                        className="inline-block mt-5 text-blue-600 hover:underline"
+                    >
+                        ← Back to My Trips
+                    </Link>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-100">
             <Navbar />
 
-            {/* <main className="max-w-4xl mx-auto p-6">
+            <main className="max-w-4xl mx-auto p-6">
                 <div className="bg-white rounded-xl shadow-md p-6">
                     <h1 className="text-3xl font-bold text-gray-800">
                         {trip.name}
@@ -86,7 +86,7 @@ function TripDetails() {
                         </Link>
                     </div>
                 </div>
-            </main> */}
+            </main>
         </div>
     );
 }

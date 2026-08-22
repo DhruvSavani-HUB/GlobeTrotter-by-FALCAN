@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
-
 const EditTrip = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -16,28 +15,26 @@ const EditTrip = () => {
 
     const [error, setError] = useState('');
 
-    // Load trip
-    useEffect(() => {
-        const savedTrips = JSON.parse(localStorage.getItem('trips')) || [];
+    // useEffect(() => {
+    //     const savedTrips = JSON.parse(localStorage.getItem('trips')) || [];
 
-        const foundTrip = savedTrips.find(
-            (trip) => String(trip.id) === String(id),
-        );
+    //     const foundTrip = savedTrips.find(
+    //         (trip) => String(trip.id) === String(id),
+    //     );
 
-        if (!foundTrip) {
-            navigate('/my-trips');
-            return;
-        }
+    //     if (!foundTrip) {
+    //         navigate('/my-trips');
+    //         return;
+    //     }
 
-        setFormData({
-            name: foundTrip.name || '',
-            description: foundTrip.description || '',
-            start_date: foundTrip.start_date || '',
-            end_date: foundTrip.end_date || '',
-        });
-    }, [id, navigate]);
+    //     setFormData({
+    //         name: foundTrip.name || '',
+    //         description: foundTrip.description || '',
+    //         start_date: foundTrip.start_date || '',
+    //         end_date: foundTrip.end_date || '',
+    //     });
+    // }, [id, navigate]);
 
-    // Handle input changes
     const handleChange = (e) => {
         setFormData({
             ...formData,
