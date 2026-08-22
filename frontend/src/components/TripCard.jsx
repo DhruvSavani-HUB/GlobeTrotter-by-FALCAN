@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 
+
 const TripCard = ({ trip }) => {
     return (
         <div className="bg-white rounded-xl shadow-md p-5 hover:shadow-lg transition">
