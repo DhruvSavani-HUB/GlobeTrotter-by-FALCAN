@@ -1,77 +1,120 @@
-const db = require("../config/db");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const db = require("../config/db");
 
+// ===============================
+// SIGNUP
+// ===============================
 const signup = (req, res) => {
   const { name, email, password } = req.body;
 
+  // Validation
   if (!name || !email || !password) {
     return res.status(400).json({
-      message: "All fields are required",
+      message: "Name, email and password are required",
     });
   }
 
-  const checkEmailQuery =
-    "SELECT id FROM users WHERE email = ?";
+  // Check password length
+  if (password.length < 6) {
+    return res.status(400).json({
+      message: "Password must be at least 6 characters",
+    });
+  }
 
-  db.query(checkEmailQuery, [email], async (error, results) => {
+  // Check if email already exists
+  const checkUserQuery = `
+    SELECT id FROM users WHERE email = ?
+  `;
+
+  db.query(checkUserQuery, [email], async (error, results) => {
     if (error) {
+      console.error("CHECK USER ERROR:", error);
+
       return res.status(500).json({
         message: "Database error",
-        error: error.message,
       });
     }
 
+    // User already exists
     if (results.length > 0) {
       return res.status(409).json({
-        message: "Email already exists",
+        message: "Email already registered",
       });
     }
 
     try {
+      // Hash password
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      const insertQuery =
-        "INSERT INTO users (name, email, password) VALUES (?, ?, ?)";
+      // Insert user
+      const insertQuery = `
+        INSERT INTO users (name, email, password)
+        VALUES (?, ?, ?)
+      `;
 
       db.query(
         insertQuery,
         [name, email, hashedPassword],
-        (error, result) => {
-          if (error) {
+        (insertError, result) => {
+          if (insertError) {
+            console.error("SIGNUP INSERT ERROR:", insertError);
+
             return res.status(500).json({
-              message: "Failed to create user",
-              error: error.message,
+              message: "Failed to create account",
             });
           }
 
-          res.status(201).json({
-            message: "User registered successfully",
-            userId: result.insertId,
+          return res.status(201).json({
+            message: "Account created successfully",
+            user: {
+              id: result.insertId,
+              name,
+              email,
+            },
           });
         }
       );
-    } catch (error) {
-      res.status(500).json({
-        message: "Server error",
+    } catch (hashError) {
+      console.error("PASSWORD HASH ERROR:", hashError);
+
+      return res.status(500).json({
+        message: "Failed to process password",
       });
     }
   });
 };
 
+
+// ===============================
+// LOGIN
+// ===============================
 const login = (req, res) => {
   const { email, password } = req.body;
 
-  const query =
-    "SELECT * FROM users WHERE email = ?";
+  // Validation
+  if (!email || !password) {
+    return res.status(400).json({
+      message: "Email and password are required",
+    });
+  }
+
+  const query = `
+    SELECT id, name, email, password
+    FROM users
+    WHERE email = ?
+  `;
 
   db.query(query, [email], async (error, results) => {
     if (error) {
+      console.error("LOGIN DATABASE ERROR:", error);
+
       return res.status(500).json({
         message: "Database error",
       });
     }
 
+    // User not found
     if (results.length === 0) {
       return res.status(401).json({
         message: "Invalid email or password",
@@ -80,39 +123,52 @@ const login = (req, res) => {
 
     const user = results[0];
 
-    const passwordMatch = await bcrypt.compare(
-      password,
-      user.password
-    );
+    try {
+      // Compare entered password with hashed password
+      const isPasswordCorrect = await bcrypt.compare(
+        password,
+        user.password
+      );
 
-    if (!passwordMatch) {
-      return res.status(401).json({
-        message: "Invalid email or password",
+      if (!isPasswordCorrect) {
+        return res.status(401).json({
+          message: "Invalid email or password",
+        });
+      }
+
+      // Create JWT token
+      const token = jwt.sign(
+        {
+          id: user.id,
+          email: user.email,
+        },
+        process.env.JWT_SECRET,
+        {
+          expiresIn: "7d",
+        }
+      );
+
+      return res.status(200).json({
+        message: "Login successful",
+
+        token,
+
+        user: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        },
+      });
+    } catch (compareError) {
+      console.error("LOGIN ERROR:", compareError);
+
+      return res.status(500).json({
+        message: "Login failed",
       });
     }
-
-    const token = jwt.sign(
-      {
-        id: user.id,
-        email: user.email,
-      },
-      process.env.JWT_SECRET,
-      {
-        expiresIn: "7d",
-      }
-    );
-
-    res.json({
-      message: "Login successful",
-      token,
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-      },
-    });
   });
 };
+
 
 module.exports = {
   signup,
