@@ -1,8 +1,7 @@
 const db = require("../config/db");
 
-// CREATE TRIP
 const createTrip = (req, res) => {
-  const userId = 1;
+  const userId = req.user.id;
 
   const {
     name,
@@ -44,9 +43,8 @@ const createTrip = (req, res) => {
 };
 
 
-// GET MY TRIPS
 const getMyTrips = (req, res) => {
-  const userId = 1;
+  const userId = req.user.id;
 
   const query = `
     SELECT *
@@ -67,4 +65,9 @@ const getMyTrips = (req, res) => {
       trips: results,
     });
   });
+};
+
+module.exports = {
+  createTrip,
+  getMyTrips,
 };

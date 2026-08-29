@@ -8,7 +8,6 @@ const {
   getMyTrips,
 } = require("../controllers/tripController");
 
-// All trip routes require login
 router.post("/", authenticateToken, createTrip);
 
 router.get("/", authenticateToken, getMyTrips);
