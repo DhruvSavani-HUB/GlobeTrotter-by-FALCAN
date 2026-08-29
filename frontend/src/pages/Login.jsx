@@ -32,10 +32,8 @@ function Login() {
                 password: formData.password,
             });
 
-            // Save token
             localStorage.setItem('token', response.data.token);
 
-            // Save user
             localStorage.setItem('user', JSON.stringify(response.data.user));
 
             // Redirect to dashboard
