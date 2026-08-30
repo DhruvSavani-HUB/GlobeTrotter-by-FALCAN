@@ -2,27 +2,21 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const db = require("../config/db");
 
-// ===============================
-// SIGNUP
-// ===============================
 const signup = (req, res) => {
   const { name, email, password } = req.body;
 
-  // Validation
   if (!name || !email || !password) {
     return res.status(400).json({
       message: "Name, email and password are required",
     });
   }
 
-  // Check password length
   if (password.length < 6) {
     return res.status(400).json({
       message: "Password must be at least 6 characters",
     });
   }
 
-  // Check if email already exists
   const checkUserQuery = `
     SELECT id FROM users WHERE email = ?
   `;
@@ -169,8 +163,89 @@ const login = (req, res) => {
   });
 };
 
+const getProfile = (req, res) => {
+    const userId = req.user.id;
+
+    const query = `
+        SELECT id, name, email
+        FROM users
+        WHERE id = ?
+    `;
+
+    db.query(query, [userId], (error, results) => {
+        if (error) {
+            console.error("GET PROFILE ERROR:", error);
+
+            return res.status(500).json({
+                message: "Database error",
+            });
+        }
+
+        if (results.length === 0) {
+            return res.status(404).json({
+                message: "User not found",
+            });
+        }
+
+        return res.status(200).json(results[0]);
+    });
+};
+
+
+const updateProfile = (req, res) => {
+    const userId = req.user.id;
+
+    const { name, email } = req.body;
+
+    if (!name || !email) {
+        return res.status(400).json({
+            message: "Name and email are required",
+        });
+    }
+
+    const query = `
+        UPDATE users
+        SET name = ?, email = ?
+        WHERE id = ?
+    `;
+
+    db.query(
+        query,
+        [name.trim(), email.trim(), userId],
+        (error, result) => {
+            if (error) {
+                console.error("UPDATE PROFILE ERROR:", error);
+
+                if (error.code === "ER_DUP_ENTRY") {
+                    return res.status(409).json({
+                        message: "Email already registered",
+                    });
+                }
+
+                return res.status(500).json({
+                    message: "Database error",
+                });
+            }
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({
+                    message: "User not found",
+                });
+            }
+
+            return res.status(200).json({
+                message: "Profile updated successfully",
+                name: name.trim(),
+                email: email.trim(),
+            });
+        }
+    );
+};
+
 
 module.exports = {
   signup,
   login,
+  getProfile,
+  updateProfile,
 };

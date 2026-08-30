@@ -2,6 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Navbar from '../components/Navbar';
 
+const API_URL = 'http://localhost:5000';
+
 const EditTrip = () => {
     const { id } = useParams();
     const navigate = useNavigate();
@@ -13,68 +15,134 @@ const EditTrip = () => {
         end_date: '',
     });
 
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [error, setError] = useState('');
 
-    // useEffect(() => {
-    //     const savedTrips = JSON.parse(localStorage.getItem('trips')) || [];
+    useEffect(() => {
+        const fetchTrip = async () => {
+            try {
+                setLoading(true);
+                setError('');
 
-    //     const foundTrip = savedTrips.find(
-    //         (trip) => String(trip.id) === String(id),
-    //     );
+                const token = localStorage.getItem('token');
 
-    //     if (!foundTrip) {
-    //         navigate('/my-trips');
-    //         return;
-    //     }
+                const response = await fetch(`${API_URL}/api/trips/${id}`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
 
-    //     setFormData({
-    //         name: foundTrip.name || '',
-    //         description: foundTrip.description || '',
-    //         start_date: foundTrip.start_date || '',
-    //         end_date: foundTrip.end_date || '',
-    //     });
-    // }, [id, navigate]);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Failed to fetch trip');
+                }
+
+                setFormData({
+                    name: data.name || '',
+                    description: data.description || '',
+                    start_date: data.start_date
+                        ? data.start_date.substring(0, 10)
+                        : '',
+                    end_date: data.end_date
+                        ? data.end_date.substring(0, 10)
+                        : '',
+                });
+            } catch (error) {
+                console.error('Fetch trip error:', error);
+                setError(error.message || 'Unable to load trip.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTrip();
+    }, [id]);
 
     const handleChange = (e) => {
-        setFormData({
-            ...formData,
-            [e.target.name]: e.target.value,
-        });
+        const { name, value } = e.target;
+
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
     };
 
-    // Save changes
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         setError('');
 
-        // Validate dates
+        if (!formData.name.trim()) {
+            setError('Please enter a trip name.');
+            return;
+        }
+
+        if (!formData.start_date || !formData.end_date) {
+            setError('Please select both dates.');
+            return;
+        }
+
         if (formData.end_date < formData.start_date) {
             setError('End date cannot be before start date.');
             return;
         }
 
-        const savedTrips = JSON.parse(localStorage.getItem('trips')) || [];
+        try {
+            setSaving(true);
 
-        const updatedTrips = savedTrips.map((trip) => {
-            if (String(trip.id) === String(id)) {
-                return {
-                    ...trip,
-                    name: formData.name,
-                    description: formData.description,
+            const token = localStorage.getItem('token');
+
+            const response = await fetch(`${API_URL}/api/trips/${id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    name: formData.name.trim(),
+                    description: formData.description.trim(),
                     start_date: formData.start_date,
                     end_date: formData.end_date,
-                };
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.message || 'Failed to update trip');
             }
 
-            return trip;
-        });
+            alert('Trip updated successfully!');
 
-        localStorage.setItem('trips', JSON.stringify(updatedTrips));
+            navigate(`/my-trips`);
+        } catch (error) {
+            console.error('Update trip error:', error);
 
-        // Go back to trip details
-        navigate(`/trip/${id}`);
+            setError(
+                error.message || 'Unable to update trip. Please try again.',
+            );
+        } finally {
+            setSaving(false);
+        }
     };
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-100">
+                <Navbar />
+
+                <main className="max-w-3xl mx-auto p-6">
+                    <div className="bg-white rounded-xl shadow-md p-8 text-center">
+                        <p className="text-gray-600">Loading trip...</p>
+                    </div>
+                </main>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-100">
@@ -90,15 +158,13 @@ const EditTrip = () => {
                         Update your trip information.
                     </p>
 
-                    {/* Error */}
                     {error && (
-                        <div className="mb-5 bg-red-100 border border-red-200 text-red-600 p-4 rounded-lg">
+                        <div className="mb-6 bg-red-100 border border-red-200 text-red-700 p-4 rounded-lg">
                             {error}
                         </div>
                     )}
 
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Trip Name */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Trip Name
@@ -115,7 +181,6 @@ const EditTrip = () => {
                             />
                         </div>
 
-                        {/* Description */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-2">
                                 Description
@@ -131,7 +196,6 @@ const EditTrip = () => {
                             />
                         </div>
 
-                        {/* Dates */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -164,19 +228,20 @@ const EditTrip = () => {
                             </div>
                         </div>
 
-                        {/* Buttons */}
                         <div className="flex gap-4 pt-2">
                             <button
                                 type="submit"
-                                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700"
+                                disabled={saving}
+                                className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 disabled:bg-blue-300 transition"
                             >
-                                Save Changes
+                                {saving ? 'Saving...' : 'Save Changes'}
                             </button>
 
                             <button
                                 type="button"
                                 onClick={() => navigate(`/trip/${id}`)}
-                                className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-100"
+                                disabled={saving}
+                                className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg font-medium hover:bg-gray-100 transition"
                             >
                                 Cancel
                             </button>
